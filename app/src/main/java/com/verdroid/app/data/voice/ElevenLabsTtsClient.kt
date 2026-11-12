@@ -42,6 +42,7 @@ class ElevenLabsTtsClient @Inject constructor(
         @Volatile var finished = false
         @Volatile var failed = false
         @Volatile var worker: Thread? = null
+        @Volatile var timeout: Runnable? = null
     }
 
     @Volatile private var active: Session? = null
@@ -60,6 +61,15 @@ class ElevenLabsTtsClient @Inject constructor(
         cancel()
         val session = Session()
         synchronized(lock) { active = session }
+        // Prevent a forgotten or stalled websocket from holding a paid voice session open.
+        val timeout = Runnable {
+            if (active === session) {
+                markFailed(session)
+                session.socket?.cancel()
+            }
+        }
+        session.timeout = timeout
+        main.postDelayed(timeout, 180_000L)
 
         val socket = try {
             http.newWebSocket(request, object : WebSocketListener() {
@@ -102,6 +112,7 @@ class ElevenLabsTtsClient @Inject constructor(
                 }
             })
         } catch (_: Exception) {
+            main.removeCallbacks(timeout)
             synchronized(lock) { if (active === session) active = null }
             return false
         }
@@ -197,6 +208,7 @@ class ElevenLabsTtsClient @Inject constructor(
     ) {
         main.post {
             if (active === session) {
+                session.timeout?.let { main.removeCallbacks(it) }
                 synchronized(lock) { if (active === session) active = null }
                 session.socket?.cancel()
                 done(result)
@@ -209,6 +221,7 @@ class ElevenLabsTtsClient @Inject constructor(
         val old: Session? = synchronized(lock) {
             val s = active; active = null; s
         }
+        old?.timeout?.let { main.removeCallbacks(it) }
         old?.socket?.cancel()
         old?.worker?.interrupt()
         val audio = old?.audio
