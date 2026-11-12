@@ -29,7 +29,7 @@ class VoiceSettingsViewModel @Inject constructor(val prefs: VoicePrefs) : ViewMo
 /** Settings → Voice: mic button, auto-send, read replies aloud, hands-free. Uses the phone's default language. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VoiceSettingsScreen(onBack: () -> Unit, vm: VoiceSettingsViewModel = hiltViewModel()) {
+fun VoiceSettingsScreen(onBack: () -> Unit, onRealtime: () -> Unit = {}, vm: VoiceSettingsViewModel = hiltViewModel()) {
     val p = vm.prefs
     val mic by p.micButton.collectAsStateWithLifecycle()
     val autoSend by p.autoSend.collectAsStateWithLifecycle()
@@ -55,10 +55,19 @@ fun VoiceSettingsScreen(onBack: () -> Unit, vm: VoiceSettingsViewModel = hiltVie
                 { _ -> row(stringResource(R.string.voice_speak), stringResource(R.string.voice_speak_desc), speak, set = p::setSpeakReplies) },
                 { _ -> row(stringResource(R.string.voice_hands_free), stringResource(R.string.voice_hands_free_desc), handsFree, enabled = speak, set = p::setHandsFree) },
             ))
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            Text("OpenAI Realtime Voice", style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp))
+            Text("Speak directly with an OpenAI Realtime model in a separate paid session. Normal Android voice stays available.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
+            Button(onClick = onRealtime, modifier = Modifier.padding(horizontal = 24.dp)) {
+                Text("Open NOX Realtime Voice")
+            }
             Text(
                 "Language: ${Locale.getDefault().displayName} (phone default). " +
                     (if (recognizer) "Speech recognition: available." else "Speech recognition service not found; the system voice prompt is used if one exists.") +
-                    " Everything uses Android's built-in speech services, no keys or paid APIs.",
+                    " Normal chat voice uses Android's built-in speech services with no paid APIs.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp),
             )

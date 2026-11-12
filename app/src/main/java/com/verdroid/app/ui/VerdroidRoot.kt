@@ -69,6 +69,7 @@ object Routes {
     const val PERMISSIONS = "settings/permissions"
     const val THEME = "settings/theme"
     const val VOICE = "settings/voice"
+    const val REALTIME_VOICE = "settings/voice/realtime"
     const val ARCHIVE = "settings/archive"
     const val PROVIDER = "settings/provider"
     const val MEMORY = "settings/memory?chat={chat}"
@@ -222,7 +223,8 @@ fun VerdroidRoot(
             composable(Routes.ARCHIVE) {
                 com.verdroid.app.ui.archive.ArchiveScreen(onBack = { nav.popBackStack() }, onOpenChat = { nav.navigate(Routes.chat(it)) })
             }
-            composable(Routes.VOICE) { com.verdroid.app.ui.voice.VoiceSettingsScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.VOICE) { com.verdroid.app.ui.voice.VoiceSettingsScreen(onBack = { nav.popBackStack() }, onRealtime = { nav.navigate(Routes.REALTIME_VOICE) }) }
+            composable(Routes.REALTIME_VOICE) { com.verdroid.app.ui.voice.RealtimeVoiceScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.THEME) { com.verdroid.app.ui.theme.ThemeScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.PROVIDER) { com.verdroid.app.ui.provider.ProviderScreen(onBack = { nav.popBackStack() }, onOpenModels = { nav.navigate(Routes.MODELS) }) }
             composable(Routes.CHAT_HEADS) { ChatHeadSettingsScreen(onBack = { nav.popBackStack() }) }

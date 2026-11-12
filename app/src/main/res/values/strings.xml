@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Verdroid</string>
+    <string name="app_name">NOX</string>
     <string name="accessibility_label">Verdroid agent control</string>
     <string name="accessibility_description">Lets the Verdroid agent tap, swipe, type and read what is on screen when you ask it to automate a task on this phone. Nothing is sent anywhere except to the AI model you configured, as part of the task.</string>
 
@@ -699,6 +699,8 @@
     <string name="pal_rose_d">Soft pinks</string>
     <string name="pal_ocean">Ocean</string>
     <string name="pal_ocean_d">Teal and sea blue</string>
+    <string name="pal_nox">NOX Terminal</string>
+    <string name="pal_nox_d">Deep green surfaces with phosphor green text</string>
     <string name="pal_miku">Miku</string>
     <string name="pal_miku_d">Miku teal with pink accents</string>
     <string name="ts_00">Beta, posts as you: asks Post / Cancel first (unless allowed)</string>
