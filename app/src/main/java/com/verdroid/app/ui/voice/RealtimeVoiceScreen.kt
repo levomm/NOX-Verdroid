@@ -66,7 +66,8 @@ fun RealtimeVoiceScreen(
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) vm.connect()
     }
-    // Never leave a paid recording running in the background.
+    // Never leave an active, billable microphone session running after backgrounding.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.disconnect() }
     DisposableEffect(vm) { onDispose { vm.disconnect() } }
     val active = state.phase == RealtimePhase.LISTENING || state.phase == RealtimePhase.RESPONDING ||
         state.phase == RealtimePhase.CONNECTING
