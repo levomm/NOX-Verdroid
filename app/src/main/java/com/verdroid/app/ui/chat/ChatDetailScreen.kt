@@ -142,8 +142,9 @@ fun ChatDetailScreen(onBack: () -> Unit, onChatMemory: (Long) -> Unit = {}, vm: 
     val autoSend by voicePrefs.autoSend.collectAsStateWithLifecycle()
     val handsFree by voicePrefs.handsFree.collectAsStateWithLifecycle()
     val micOn by voicePrefs.micButton.collectAsStateWithLifecycle()
-    val voice = remember { com.verdroid.app.ui.voice.VoiceController(context.applicationContext) }
+    val voice = remember { com.verdroid.app.ui.voice.VoiceController(context.applicationContext, vm.voicePrefs, vm.elevenLabsTts) }
     DisposableEffect(Unit) { onDispose { voice.release() } }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { voice.stopSpeaking() }
     val voiceText = com.verdroid.app.data.voice.VoiceText
     val currentInput by rememberUpdatedState(input)
     val currentGenerating by rememberUpdatedState(generating)
