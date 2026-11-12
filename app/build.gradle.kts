@@ -38,11 +38,11 @@ android {
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
-        applicationId = "com.verdroid.app"
+        applicationId = "ee.osx01.nox"
         minSdk = 30
         targetSdk = 35
         versionCode = 133
-        versionName = "1.0.77"
+        versionName = "1.0.77-nox.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         // On-device LLM (llama.cpp, CPU only): arm64 phones only.
@@ -101,7 +101,7 @@ android {
     applicationVariants.all {
         outputs.all {
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                if (buildType.name == "release") "Verdroid-v${versionName}.apk" else "Verdroid-v${versionName}-${buildType.name}.apk"
+                if (buildType.name == "release") "NOX-v${versionName}.apk" else "NOX-v${versionName}-${buildType.name}.apk"
         }
     }
     // v1.0.12: Room DAO + migration tests run on the JVM via Robolectric (old schemas read from /schemas).
