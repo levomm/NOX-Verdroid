@@ -36,6 +36,7 @@ class VoiceController(
 
     var onResult: (String) -> Unit = {}
     var onError: (code: Int) -> Unit = {}
+    var onSpeechFallback: (String) -> Unit = {}
     /** Called when a reply finished speaking (not when stopped). */
     var onSpeechDone: () -> Unit = {}
 
@@ -105,7 +106,10 @@ class VoiceController(
                             speaking = false
                             onSpeechDone()
                         }
-                        ElevenLabsSpeechResult.BEFORE_AUDIO_FAILURE -> speakAndroid(text)
+                        ElevenLabsSpeechResult.BEFORE_AUDIO_FAILURE -> {
+                            onSpeechFallback("ElevenLabs ei vastanud. Kasutan Androidi häält.")
+                            speakAndroid(text)
+                        }
                         ElevenLabsSpeechResult.AFTER_AUDIO_FAILURE -> speaking = false
                     }
                 }
@@ -114,6 +118,7 @@ class VoiceController(
                 speaking = true
                 return
             }
+            onSpeechFallback("ElevenLabsi võti puudub või kohalik krediidilimiit täis. Kasutan Androidi häält.")
         }
         speakAndroid(text)
     }
