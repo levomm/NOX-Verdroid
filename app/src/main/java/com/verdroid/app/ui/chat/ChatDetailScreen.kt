@@ -142,6 +142,7 @@ fun ChatDetailScreen(onBack: () -> Unit, onChatMemory: (Long) -> Unit = {}, vm: 
     val autoSend by voicePrefs.autoSend.collectAsStateWithLifecycle()
     val handsFree by voicePrefs.handsFree.collectAsStateWithLifecycle()
     val micOn by voicePrefs.micButton.collectAsStateWithLifecycle()
+    val chatForeground by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
     val voice = remember { com.verdroid.app.ui.voice.VoiceController(context.applicationContext, vm.voicePrefs, vm.elevenLabsTts) }
     DisposableEffect(Unit) { onDispose { voice.release() } }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { voice.stopSpeaking() }
@@ -187,8 +188,8 @@ fun ChatDetailScreen(onBack: () -> Unit, onChatMemory: (Long) -> Unit = {}, vm: 
     run {
         val newest = visible.lastOrNull()
         val newestIsReply = newest != null && newest.role == MessageRole.ASSISTANT && !newest.content.isNullOrBlank() && newest.toolCallsJson.isNullOrBlank()
-        LaunchedEffect(generating, newest?.id, newest?.content, speakOn) {
-            if (voiceText.shouldSpeak(speakOn, generating, sawRun, newestIsReply, newest?.id, spokenId)) {
+        LaunchedEffect(generating, newest?.id, newest?.content, speakOn, chatForeground) {
+            if (chatForeground.isAtLeast(Lifecycle.State.RESUMED) && voiceText.shouldSpeak(speakOn, generating, sawRun, newestIsReply, newest?.id, spokenId)) {
                 sawRun = false; spokenId = newest?.id
                 voice.speak(newest?.content)
             } else if (!generating && sawRun && newestIsReply && !speakOn) { sawRun = false; spokenId = newest?.id }
