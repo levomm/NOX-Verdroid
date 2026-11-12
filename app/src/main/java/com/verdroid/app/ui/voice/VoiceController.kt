@@ -12,6 +12,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.verdroid.app.data.voice.VoiceText
+import com.verdroid.app.data.voice.VoicePrefs
+import com.verdroid.app.data.voice.ElevenLabsTtsClient
+import com.verdroid.app.data.voice.ElevenLabsSpeechResult
 import java.util.Locale
 
 /**
@@ -19,7 +22,11 @@ import java.util.Locale
  * Main thread only. [release] in onDispose. Falls back to RecognizerIntent when no recognizer service exists
  * ([needsIntentFallback]); the screen launches [recognizeIntent] for that.
  */
-class VoiceController(private val context: Context) {
+class VoiceController(
+    private val context: Context,
+    private val voicePrefs: VoicePrefs? = null,
+    private val elevenLabs: ElevenLabsTtsClient? = null,
+) {
     enum class Mic { IDLE, LISTENING, PROCESSING }
 
     var mic by mutableStateOf(Mic.IDLE); private set
@@ -37,6 +44,7 @@ class VoiceController(private val context: Context) {
     private var ttsReady = false
     private var pending: String? = null
     private var stopped = false
+    private var speakGeneration = 0L
     private val main = android.os.Handler(android.os.Looper.getMainLooper())
 
     val recognizerAvailable: Boolean get() = runCatching { SpeechRecognizer.isRecognitionAvailable(context) }.getOrDefault(false)
@@ -81,27 +89,60 @@ class VoiceController(private val context: Context) {
         override fun onEvent(eventType: Int, params: Bundle?) {}
     }
 
-    /** Speaks a markdown reply (markup and code stripped). Interrupts anything already speaking. */
+    /** Selects ElevenLabs for this normal chat when configured, else Android system TTS. */
     fun speak(markdown: String?) {
         val text = VoiceText.forSpeech(markdown)
         if (text.isBlank()) return
+        stopSpeaking()
         stopped = false
+        val token = speakGeneration
+        if (voicePrefs?.ttsProvider?.value == "elevenlabs" && elevenLabs != null) {
+            val started = elevenLabs.speak(text) { outcome ->
+                main.post {
+                    if (stopped || token != speakGeneration) return@post
+                    when (outcome) {
+                        ElevenLabsSpeechResult.COMPLETE -> {
+                            speaking = false
+                            onSpeechDone()
+                        }
+                        ElevenLabsSpeechResult.BEFORE_AUDIO_FAILURE -> speakAndroid(text)
+                        ElevenLabsSpeechResult.AFTER_AUDIO_FAILURE -> speaking = false
+                    }
+                }
+            }
+            if (started) {
+                speaking = true
+                return
+            }
+        }
+        speakAndroid(text)
+    }
+
+    private fun speakAndroid(text: String) {
+        if (stopped) return
         if (tts == null) TextToSpeech(context) { status ->
             main.post {
                 ttsReady = status == TextToSpeech.SUCCESS
-                if (ttsReady) { runCatching { tts?.language = Locale.getDefault() }; pending?.let { pending = null; say(it) } }
-                else { pending = null; speaking = false }
+                if (ttsReady) {
+                    runCatching { tts?.language = Locale.getDefault() }
+                    pending?.let { pending = null; say(it) }
+                } else { pending = null; speaking = false }
             }
         }.also { t ->
             tts = t
             t.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) { main.post { speaking = true } }
                 override fun onDone(utteranceId: String?) {
-                    if (utteranceId?.startsWith(LAST) == true) main.post { speaking = false; if (!stopped) onSpeechDone() }
+                    if (utteranceId?.startsWith(LAST) == true) main.post {
+                        speaking = false
+                        if (!stopped) onSpeechDone()
+                    }
                 }
                 @Deprecated("Deprecated in Java")
                 override fun onError(utteranceId: String?) { main.post { speaking = false } }
-                override fun onStop(utteranceId: String?, interrupted: Boolean) { main.post { speaking = false } }
+                override fun onStop(utteranceId: String?, interrupted: Boolean) {
+                    main.post { speaking = false }
+                }
             })
         }
         if (ttsReady) say(text) else { pending = text; speaking = true }
@@ -118,7 +159,9 @@ class VoiceController(private val context: Context) {
     }
 
     fun stopSpeaking() {
+        speakGeneration++
         stopped = true; pending = null
+        elevenLabs?.cancel()
         runCatching { tts?.stop() }
         speaking = false
     }
