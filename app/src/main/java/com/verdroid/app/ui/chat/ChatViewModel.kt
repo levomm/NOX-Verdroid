@@ -44,6 +44,7 @@ class ChatViewModel @Inject constructor(
     private val profileStore: com.verdroid.app.data.profiles.ProfileStore,
     @ApplicationContext private val appContext: Context,
     val voicePrefs: com.verdroid.app.data.voice.VoicePrefs,
+    val elevenLabsTts: com.verdroid.app.data.voice.ElevenLabsTtsClient,
 ) : ViewModel() {
     /** 0 = a brand-new conversation that is created on the first send. */
     private val taskId = MutableStateFlow(savedState.get<Long>("taskId") ?: 0L)
