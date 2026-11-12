@@ -104,7 +104,7 @@ class RealtimeVoiceClient(
                         synchronized(this@RealtimeVoiceClient) {
                             runCatching { speaker?.pause(); speaker?.flush(); speaker?.play() }
                         }
-                        if (responseActive) webSocket.send(RealtimeProtocol.cancelResponse())
+                        // semantic_vad interrupts active responses server-side; do not race it with response.cancel.
                         responseActive = false
                         _state.value = _state.value.copy(phase = RealtimePhase.LISTENING, message = "Listening…", transcript = "")
                     }
