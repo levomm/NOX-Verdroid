@@ -71,6 +71,12 @@ android {
         }
     }
     buildTypes {
+        // The first NOX preview used an ephemeral CI debug signing key. Keep new preview builds
+        // side by side instead of requiring destructive uninstall of the existing NOX app.
+        debug {
+            applicationIdSuffix = ".voicebeta"
+            versionNameSuffix = "-voicebeta"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
