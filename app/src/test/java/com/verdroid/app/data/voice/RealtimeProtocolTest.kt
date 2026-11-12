@@ -14,7 +14,7 @@ class RealtimeProtocolTest {
         assertEquals("session.update", root["type"]?.jsonPrimitive?.content)
         val session = root["session"]!!.jsonObject
         assertEquals("realtime", session["type"]!!.jsonPrimitive.content)
-        assertEquals("gpt-realtime-2.1-mini", session["model"]!!.jsonPrimitive.content)
+        assertEquals(null, session["model"])
         val audio = session["audio"]!!.jsonObject
         assertEquals("audio/pcm", audio["input"]!!.jsonObject["format"]!!.jsonObject["type"]!!.jsonPrimitive.content)
         assertEquals("24000", audio["input"]!!.jsonObject["format"]!!.jsonObject["rate"]!!.jsonPrimitive.content)
