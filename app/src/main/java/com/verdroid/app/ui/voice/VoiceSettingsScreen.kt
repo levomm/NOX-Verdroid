@@ -2,6 +2,7 @@ package com.verdroid.app.ui.voice
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,6 +19,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.verdroid.app.data.network.CustomProviderStore
 import com.verdroid.app.data.voice.ElevenLabsTtsClient
+import com.verdroid.app.data.voice.ElevenLabsSpeechResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import com.verdroid.app.data.voice.ElevenLabsTtsPolicy
 import com.verdroid.app.data.voice.VoicePrefs
 import com.verdroid.app.ui.components.SettingsGroup
@@ -33,10 +38,24 @@ class VoiceSettingsViewModel @Inject constructor(
     val keyStore: CustomProviderStore,
     private val elevenLabs: ElevenLabsTtsClient,
 ) : ViewModel() {
-    fun previewVoice(): Boolean = elevenLabs.speak(
-        "Tere. Mina olen NOX. Kas me saame nüüd lõpuks asja tööle või tuleb jälle logisid lugeda?"
-    ) { }
-    fun stopPreview() = elevenLabs.cancel()
+    private val _previewStatus = MutableStateFlow("")
+    val previewStatus: StateFlow<String> = _previewStatus.asStateFlow()
+    fun previewVoice() {
+        val started = elevenLabs.speak(
+            "Tere. Mina olen NOX. Kas me saame nüüd lõpuks asja tööle või tuleb jälle logisid lugeda?"
+        ) { outcome ->
+            _previewStatus.value = when (outcome) {
+                ElevenLabsSpeechResult.COMPLETE -> "Hääletest lõppes."
+                ElevenLabsSpeechResult.BEFORE_AUDIO_FAILURE ->
+                    "ElevenLabs ei tagastanud heli. Kontrolli API-võtit, Voice ID-d ja konto krediiti."
+                ElevenLabsSpeechResult.AFTER_AUDIO_FAILURE ->
+                    "ElevenLabsi helivoog katkes enne lõppu."
+            }
+        }
+        _previewStatus.value = if (started) "Hääletest käivitatud (tasuline)." else
+            "Hääletest pole saadaval: kontrolli API-võtit ja päevast limiiti."
+    }
+    fun stopPreview() { elevenLabs.cancel(); _previewStatus.value = "" }
     override fun onCleared() { elevenLabs.cancel(); super.onCleared() }
 }
 
@@ -59,7 +78,7 @@ fun VoiceSettingsScreen(onBack: () -> Unit, onRealtime: () -> Unit = {}, vm: Voi
     val recognizer = remember { runCatching { android.speech.SpeechRecognizer.isRecognitionAvailable(ctx) }.getOrDefault(false) }
     var enteredKey by remember { mutableStateOf("") }
     var customVoice by remember(voiceId) { mutableStateOf(voiceId) }
-    var previewStatus by remember { mutableStateOf("") }
+    val previewStatus by vm.previewStatus.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.stopPreview() }
     DisposableEffect(vm) { onDispose { vm.stopPreview() } }
 
@@ -143,7 +162,7 @@ fun VoiceSettingsScreen(onBack: () -> Unit, onRealtime: () -> Unit = {}, vm: Voi
             ) { Text("Salvesta hääl") }
             Text("Krediidipiirang: ühe vastuse pikkus", style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
-            Row(Modifier.padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.padding(horizontal = 24.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(600, 1200, 2400).forEach { n ->
                     FilterChip(selected = replyCap == n, onClick = { p.setReplyCharCap(n) },
                         label = { Text("$n märki") })
@@ -152,7 +171,7 @@ fun VoiceSettingsScreen(onBack: () -> Unit, onRealtime: () -> Unit = {}, vm: Voi
             Text("Päevane ElevenLabsi tekstilimiit (kohalik turvapiirang)",
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
-            Row(Modifier.padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.padding(horizontal = 24.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(2000, 8000, 20000).forEach { n ->
                     FilterChip(selected = dailyCap == n, onClick = { p.setDailyCharCap(n) },
                         label = { Text("$n") })
@@ -166,9 +185,7 @@ fun VoiceSettingsScreen(onBack: () -> Unit, onRealtime: () -> Unit = {}, vm: Voi
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             )
             Row(Modifier.padding(horizontal = 24.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = {
-                    previewStatus = if (vm.previewVoice()) "Hääletest käivitatud (tasuline)." else "Hääletest pole saadaval: kontrolli võtit ja limiiti."
-                }, enabled = configured) { Text("Kuula näidist (tasuline)") }
+                Button(onClick = vm::previewVoice, enabled = configured) { Text("Kuula näidist (tasuline)") }
                 OutlinedButton(onClick = { vm.stopPreview() }) { Text("Peata") }
             }
             if (previewStatus.isNotBlank()) Text(previewStatus,
