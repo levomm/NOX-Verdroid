@@ -52,6 +52,7 @@ enum class Palette(val label: String, val description: String, val seed: Long) {
     ROSE("Rose", "Soft pinks", 0xFFD81B60),
     OCEAN("Ocean", "Teal and sea blue", 0xFF00897B),
     MIKU("Miku", "Miku teal with pink accents", 0xFF39C5BB),
+    NOX("NOX Terminal", "Green text on deep-green surfaces", 0xFF27C960),
 }
 
 /** Resource ids for the theme mode labels (UI reads them with stringResource). */
@@ -70,6 +71,7 @@ fun Palette.labelRes(): Int = when (this) {
     Palette.PURPLE -> com.verdroid.app.R.string.pal_purple
     Palette.ROSE -> com.verdroid.app.R.string.pal_rose
     Palette.OCEAN -> com.verdroid.app.R.string.pal_ocean
+    Palette.NOX -> com.verdroid.app.R.string.pal_nox
     Palette.MIKU -> com.verdroid.app.R.string.pal_miku
 }
 
@@ -82,6 +84,7 @@ fun Palette.descRes(): Int = when (this) {
     Palette.PURPLE -> com.verdroid.app.R.string.pal_purple_d
     Palette.ROSE -> com.verdroid.app.R.string.pal_rose_d
     Palette.OCEAN -> com.verdroid.app.R.string.pal_ocean_d
+    Palette.NOX -> com.verdroid.app.R.string.pal_nox_d
     Palette.MIKU -> com.verdroid.app.R.string.pal_miku_d
 }
 
@@ -185,8 +188,36 @@ object Palettes {
             surfaceContainerLow = Color(0xFF0A0A0A), surfaceContainer = Color(0xFF121212), surfaceContainerHigh = Color(0xFF1C1C1C),
             surfaceContainerHighest = Color(0xFF262626), surfaceBright = Color(0xFF2C2C2C), surfaceVariant = Color(0xFF1C1C1C),
         ) else fromSeed(p.seed, false)
+        Palette.NOX -> nox(dark)
         Palette.MIKU -> miku(dark)
         else -> fromSeed(p.seed, dark)
+    }
+
+    /** NOX: saturated green-on-deep-green terminal palette with readable contrast. */
+    private fun nox(dark: Boolean): ColorScheme {
+        val base = fromSeed(0xFF27C960, dark)
+        return if (dark) base.copy(
+            primary = Color(0xFF65F58F), onPrimary = Color(0xFF05210C),
+            primaryContainer = Color(0xFF125C2C), onPrimaryContainer = Color(0xFFC1FFD1),
+            inversePrimary = Color(0xFF168347),
+            secondary = Color(0xFF8DEBA5), onSecondary = Color(0xFF082313),
+            tertiary = Color(0xFFB0F5A3), onTertiary = Color(0xFF0A260D),
+            background = Color(0xFF04180A), onBackground = Color(0xFFACFFC2),
+            surface = Color(0xFF04180A), onSurface = Color(0xFFACFFC2),
+            surfaceDim = Color(0xFF031206), surfaceBright = Color(0xFF225C35),
+            surfaceContainerLowest = Color(0xFF031206), surfaceContainerLow = Color(0xFF08220F),
+            surfaceContainer = Color(0xFF0D2B15), surfaceContainerHigh = Color(0xFF12371D),
+            surfaceContainerHighest = Color(0xFF194A29),
+            surfaceVariant = Color(0xFF10321A), onSurfaceVariant = Color(0xFF8DD7A4),
+            surfaceTint = Color(0xFF65F58F),
+            outline = Color(0xFF518F60), outlineVariant = Color(0xFF2C6940),
+        ) else base.copy(
+            primary = Color(0xFF126E35), onPrimary = Color.White,
+            primaryContainer = Color(0xFFB8FFD1), onPrimaryContainer = Color(0xFF003C17),
+            background = Color(0xFFE9FFF0), onBackground = Color(0xFF104422),
+            surface = Color(0xFFE9FFF0), onSurface = Color(0xFF104422),
+            surfaceContainer = Color(0xFFD5F5DF), surfaceContainerHigh = Color(0xFFC9EFD5),
+        )
     }
 
     /** Miku: teal #39C5BB primary, pink #E12885 secondary/tertiary; dark grey surfaces in dark, teal on near-white in light. */
