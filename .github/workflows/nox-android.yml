@@ -23,8 +23,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      # Ubuntu's Android image already has commandline-tools; setup-android@v3
-      # currently requests the removed SDK package named "tools" and fails.
+      - name: Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
       - name: Install Android SDK + NDK
         run: |
           yes | sdkmanager --licenses >/dev/null || true
