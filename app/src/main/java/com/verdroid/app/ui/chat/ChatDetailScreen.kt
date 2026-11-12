@@ -174,6 +174,7 @@ fun ChatDetailScreen(onBack: () -> Unit, onChatMemory: (Long) -> Unit = {}, vm: 
     }
     SideEffect {
         voice.onResult = onRecognized
+        voice.onSpeechFallback = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
         voice.onError = { code ->
             if (!(handsFree && voiceText.isSilence(code))) Toast.makeText(context, voiceText.errorMessage(code), Toast.LENGTH_SHORT).show()
         }
