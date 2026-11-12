@@ -699,6 +699,8 @@
     <string name="pal_rose_d">柔和的粉色</string>
     <string name="pal_ocean">海洋</string>
     <string name="pal_ocean_d">青绿与海蓝</string>
+    <string name="pal_nox">NOX 终端</string>
+    <string name="pal_nox_d">深绿色背景与荧光绿色文字</string>
     <string name="pal_miku">初音</string>
     <string name="pal_miku_d">初音青绿配粉色点缀</string>
     <string name="ts_00">测试功能，以你的身份发帖：会先询问「发布/取消」（除非已允许）</string>
