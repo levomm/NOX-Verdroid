@@ -37,7 +37,6 @@ object RealtimeProtocol {
             put("type", "session.update")
             put("session", buildJsonObject {
                 put("type", "realtime")
-                put("model", model)
                 put("output_modalities", buildJsonArray { add(kotlinx.serialization.json.JsonPrimitive("audio")) })
                 put("audio", buildJsonObject {
                     put("input", buildJsonObject {
