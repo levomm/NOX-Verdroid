@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Verdroid</string>
+    <string name="app_name">NOX</string>
     <string name="accessibility_label">Verdroid 智能体控制</string>
     <string name="accessibility_description">当你让 Verdroid 智能体在这台手机上自动化执行任务时，允许它点击、滑动、输入并读取屏幕内容。除你配置的 AI 模型因任务需要接收数据外，不会向任何地方发送信息。</string>
 
