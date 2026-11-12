@@ -183,8 +183,8 @@ class RealtimeVoiceClient(
         speakerJob = scope.launch {
             while (isActive && epoch == generation) {
                 val pcm = audioQueue.poll(150, TimeUnit.MILLISECONDS) ?: continue
-                runCatching { out.write(pcm, 0, pcm.size, AudioTrack.WRITE_BLOCKING) }
-                    .onFailure { break }
+                try { out.write(pcm, 0, pcm.size, AudioTrack.WRITE_BLOCKING) }
+                catch (_: Exception) { break }
             }
         }
         microphoneJob = scope.launch {
